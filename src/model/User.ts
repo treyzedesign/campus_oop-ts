@@ -8,6 +8,8 @@ interface Users{
     isVerified: Boolean,
     pic: String
     bio: String,
+    followers: [],
+    following : [],
     createdAt: Date
 }
 
@@ -17,7 +19,9 @@ const schema = new Schema<Users>({
     email: {type:String, required: true, unique:true},
     password: {type:String, required: true},
     pic:{type: String, default: "https://res.cloudinary.com/dt4ke0max/image/upload/v1697650750/p6tvl6nzzafzxv1n6tpd.png"},
-    bio: {type: String},
+    bio: {type: String, default: 'comrade'},
+    followers: [{type: Schema.Types.ObjectId, ref:"User"}],
+    following : [{type: Schema.Types.ObjectId, ref:"User"}],
     isVerified:{type: Boolean, default: false},
     createdAt: {type:Date, default: new Date()}
 })

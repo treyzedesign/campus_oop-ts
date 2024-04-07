@@ -17,10 +17,12 @@ class PostController{
       const user = req.user as User
       try {
         const files = req.files as File[]
+        console.log(text, user);
+        
         const data = {
             userId : user.id,
-            text: text,
-            pic: await tools.cloud_upload_many(files)
+            text: text ? text : null,
+            pic: files ? await tools.cloud_upload_many(files) : null
         }
         const make_post = await Posts.create(data)
         if(make_post){
@@ -30,13 +32,17 @@ class PostController{
             })
         }    
       } catch (error) {
-        return res.status(500).send(error)
+        return res.status(500).send(error.message)
       }
     }
 
     public async get_all_posts(req: Request, res: Response, next: NextFunction) {
+        const createdAt = req.query.date == 'desc' ? -1 : 1
         try {
             const query = await Posts.find({})
+            .sort({createdAt: createdAt})
+            .populate('userId', 'pic email username fullname')
+            .populate('likes', '_id')
             if (query.length < 1){
                 return res.status(404).json({msg: "no posts"})
             }
@@ -55,6 +61,9 @@ class PostController{
         const post_id = req.params.id
         try {
             const query = await Posts.find({_id:post_id})
+            .populate('userId', 'pic email username fullname')
+            .populate('likes', '_id')
+            .populate('comments.postedBy', '_id fullname pic username')
             if (query.length < 1){
                 return res.status(404).json({msg: "could not find post"})
             }
@@ -71,8 +80,14 @@ class PostController{
     
     public async get_user_post(req: Request, res: Response, next: NextFunction){
         const userId = req.params.userId 
+        const createdAt = req.query.date == 'desc' ? -1 : 1
+
         try {
             const query = await Posts.find({userId:userId})
+            .sort({createdAt: createdAt})
+            .populate('userId', 'pic email username fullname')
+            .populate('likes', '_id')
+            .populate('comments.postedBy', '_id username')
             if (query.length < 1){
                 return res.status(404).json({msg: "could not find post"})
             }
@@ -133,7 +148,8 @@ class PostController{
     }
 
     public async comment(req: Request, res: Response, next: NextFunction){
-        const {text, postId}= req.body
+        const {text}= req.body
+        const postId = req.params.id
         const user = req.user as User
             const comment ={
                 postedBy: user.id,
@@ -164,13 +180,11 @@ class PostController{
                 return res.status(400).send("you cant like the same post twice")
             }else{
                 await Posts.findOneAndUpdate({_id:postId},{
-                    $push: {likes: {
-                        id: user.id
-                    }}
+                    $push: {likes: user.id}
                 },{
                     new:true
-                }).then((feedback)=>{
-                    res.send(feedback.likes)
+                }).populate('likes.id', '_id username').then((feedback)=>{
+                    res.status(201).json({data:feedback.likes})
                     
                 }).catch(err=>{
                     res.send(err);
@@ -192,9 +206,7 @@ class PostController{
         
         try {
             await Posts.findOneAndUpdate({_id:postId},{
-                $pull: {likes: {
-                    id: user.id
-                }}
+                $pull: {likes: user.id}
             },{
                 new:true
             }).then((feedback)=>{
@@ -212,7 +224,17 @@ class PostController{
         
     }
 
-
+    public async delete_posts(req: Request, res: Response, next: NextFunction){
+        const postId= req.params.id
+        const user = req.user as User
+        console.log(postId);
+        
+        await Posts.findOneAndDelete({_id:postId}).then(()=>{
+            return res.send("deleted successfully")
+        }).catch((err)=>{
+            return res.send(err.message)
+        })
+    }
 
 }
 

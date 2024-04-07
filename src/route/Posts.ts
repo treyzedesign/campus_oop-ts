@@ -12,10 +12,15 @@ class PostRoute {
       this.posters()
       this.getters()
       this.editors()
+      this.removers()
    }
    public posters (){
-       this.Router.post('/create-post', validate(validator.postValidation), tools.multer_upload().any(), authorize.Authuser,postController.create)
-                  
+    this.Router.post('/create-post', 
+               validate(validator.postValidation),
+                tools.multer_upload().any(),
+                 authorize.Authuser,
+                 postController.create
+      )             
    }  
    public getters (){
     this.Router.get('/getPosts',postController.get_all_posts)
@@ -25,9 +30,13 @@ class PostRoute {
                .get('/trend', postController.get_trends)
    }
    public editors(){
-    this.Router.put('/comment', authorize.Authuser, postController.comment)
+    this.Router.put('/comment/:id', authorize.Authuser, postController.comment)
                .put('/like/:id', authorize.Authuser, postController.like)
                .put('/unlike/:id', authorize.Authuser, postController.unlike)
+   }
+
+   public removers (){
+      this.Router.delete('/delete_post/:id', authorize.Authuser, postController.delete_posts)
    }
 }
 const postRouter = new PostRoute().Router

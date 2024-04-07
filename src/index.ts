@@ -39,7 +39,6 @@ export class Myserver{
     private middleware(){
         this.app.use(express.json())
         this.app.use(cors({credentials: true}))
-        // this.app.use(bodyParser())
         this.app.use(cookieSession({
             name: "session",
             keys : ['campus'],

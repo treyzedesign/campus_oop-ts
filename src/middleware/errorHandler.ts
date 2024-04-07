@@ -22,7 +22,7 @@ class ErrorHandler{
         if (err instanceof ValidationError) {
             return res.status(err.statusCode).json(err)
           }
-          console.log('validated err');
+          console.log(err);
           
           return res.status(500).json(err.message)
      }

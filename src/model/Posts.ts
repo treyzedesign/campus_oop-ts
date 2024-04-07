@@ -6,25 +6,23 @@ interface Posts{
     pic : [],
     likes: [],
     comments: [],
-    createdAt: Date
+    shares: []
 }
 
 const schema = new Schema<Posts>({
-    userId: {type: String, ref: 'User'},
-    text: {type: String, required: true},
+    userId: {type: Schema.Types.ObjectId, ref: 'User'},
+    text: {type: String},
     pic: [{type:String}],
-    likes: [{
-        id: String
-    }],
+    likes: [{type:Schema.Types.ObjectId, ref: 'User'}],
     comments: [
         {
             postedBy: {type:Schema.Types.ObjectId, ref: 'User'},
             text:String
         }
-    ],
-    createdAt: {type:Date, default: new Date()}
+    ]   ,
+    shares: []
 
-})
+}, {timestamps: true})
 const Posts = model<Posts>('Post', schema)
 
 export default Posts
